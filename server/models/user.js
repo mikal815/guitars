@@ -19,12 +19,12 @@ const userSchema = mongoose.Schema({
     name:{
         type:String,
         required: true,
-        maxlength: 100
+        maxlength:100
     },
     lastname:{
         type:String,
         required: true,
-        maxlength: 100
+        maxlength:100
     },
     cart:{
         type:Array,
@@ -41,8 +41,7 @@ const userSchema = mongoose.Schema({
     token:{
         type:String
     }
-
-})
+});
 
 userSchema.pre('save',function(next){
     var user = this;
@@ -56,14 +55,10 @@ userSchema.pre('save',function(next){
                 user.password = hash;
                 next();
             });
-    
-    
         })
     } else{
         next()
-    } 
-
-    
+    }
 })
 
 userSchema.methods.comparePassword = function(candidatePassword,cb){
@@ -80,11 +75,22 @@ userSchema.methods.generateToken = function(cb){
 
     user.token = token;
     user.save(function(err,user){
-        if (err) return cb(err);
+        if(err) return cb(err);
         cb(null,user);
     })
-    
 }
+
+userSchema.statics.findByToken = function(token,cb){
+    var user = this;
+
+    jwt.verify(token,process.env.SECRET,function(err,decode){
+        user.findOne({"_id":decode,"token":token},function(err,user){
+            if(err) return cb(err);
+            cb(null,user);
+        })
+    })
+}
+
 
 
 const User = mongoose.model('User',userSchema);
